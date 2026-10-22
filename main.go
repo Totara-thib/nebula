@@ -278,6 +278,16 @@ func Main(c *config.C, configTest bool, buildVersion string, l *slog.Logger, dev
 		cpuAffinity = cpupick.Default(routines, key, l)
 	}
 
+	// A bad `dns` stanza is not a fatal error at runtime. We want to make sure
+	// that tunnels come up, if they can.
+	hd, err := newHostDNSFromConfig(l, c, tun)
+	if err != nil {
+		if configTest {
+			return nil, util.ContextualizeIfNeeded("Failed to configure host DNS", err)
+		}
+		util.LogWithContextIfNeeded("Failed to configure host DNS", err, l)
+	}
+
 	ifConfig := &InterfaceConfig{
 		HostMap:               hostMap,
 		Inside:                tun,
@@ -362,6 +372,8 @@ func Main(c *config.C, configTest bool, buildVersion string, l *slog.Logger, dev
 		sshStart:               sshStart,
 		statsStart:             stats.Start,
 		dnsStart:               ds.Start,
+		hostDNSStart:           hd.Start,
+		hostDNSRestore:         hd.Restore,
 		lighthouseStart:        lightHouse.StartUpdateWorker,
 		networkChangeStart:     networkChanges.Start,
 		connectionManagerStart: connManager.Start,
