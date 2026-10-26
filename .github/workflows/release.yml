@@ -5,6 +5,9 @@ on:
 
 name: Create release and upload binaries
 
+permissions:
+  contents: read
+
 jobs:
   build-linux:
     name: Build Linux/BSD All
@@ -240,6 +243,9 @@ jobs:
             --tag "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" --tag "${DOCKER_IMAGE_REPO}:${GITHUB_REF#refs/tags/v}"
 
   release:
+    permissions:
+      # gh release create uploads the assets with GITHUB_TOKEN.
+      contents: write
     name: Create and Upload Release
     needs: [build-linux, build-darwin, build-windows]
     runs-on: ubuntu-latest
